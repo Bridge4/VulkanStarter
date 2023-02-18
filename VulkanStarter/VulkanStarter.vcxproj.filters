@@ -23,15 +23,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shader.vert">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="shader.frag">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="compile.bat">
-      <Filter>Source Files\shaders</Filter>
-    </None>
     <None Include="README.md" />
   </ItemGroup>
 </Project>

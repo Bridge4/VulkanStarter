@@ -21,6 +21,14 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
+
+
+#ifdef NDEBUG
+const bool enableValidationLayers = false;
+#else
+const bool enableValidationLayers = true;
+#endif
+
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
@@ -49,12 +57,6 @@ static std::vector<char> readFile(const std::string& filename) {
 
     return buffer;
 }
-
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-#else
-const bool enableValidationLayers = true;
-#endif
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
@@ -248,6 +250,7 @@ private:
 
     // VALIDATION LAYER & DEBUG CALLBACKS
     bool checkValidationLayerSupport() {
+        
         uint32_t layerCount;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -314,7 +317,6 @@ private:
     // INSTANCE CREATION
     void createInstance() {
         // A lot of information is passed through structs rather than function parameters
-
         if (enableValidationLayers && !checkValidationLayerSupport()) {
             throw std::runtime_error("validation layers requested but not available...");
         }
@@ -1084,7 +1086,7 @@ private:
             vkCreateFence(device, &fenceInfo, nullptr, &inFlightFence) != VK_SUCCESS) {
             throw std::runtime_error("failed to create semaphores!");
         }
-
+    
     }
 };
 
