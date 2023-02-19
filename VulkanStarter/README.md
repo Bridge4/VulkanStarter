@@ -209,10 +209,51 @@ We loop through the `validationLayers` struct we specified earlier, for each mem
 
 There is a lot of other debugging code here, namely the debug callbacks but dear god I don't care. I just care that it works. Go to https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Validation_layers if you want to learn about that. 
 
+Now it's time to go through the rest of the `createInstance()` function.
+
+```cpp
+// optional but helpful information for the driver
+        VkApplicationInfo appInfo{};
+        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pApplicationName = "Hello Triangle";
+        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.pEngineName = "No Engine";
+        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_3;
+        
+        // MANDATORY for instance creation
+        // Telling Vulkan what global (program) extensions and validations we want to use
+        VkInstanceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 
 
+        // ADDING appInfo to createInfo
+        createInfo.pApplicationInfo = &appInfo;
 
 
+        // Vulkan is platform agnostic. Here we provide the GLFW extension to interface with the window system
+        auto extensions = getRequiredExtensions();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+        createInfo.ppEnabledExtensionNames = extensions.data();
+
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+        if (enableValidationLayers) {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+
+            populateDebugMessengerCreateInfo(debugCreateInfo);
+            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
+        }
+        else {
+            createInfo.enabledLayerCount = 0;
+
+            createInfo.pNext = nullptr;
+        }
+
+        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create instance!");
+        }
+```
 
 ## **Progress Report**
 

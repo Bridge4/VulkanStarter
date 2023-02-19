@@ -32,7 +32,7 @@ This section is my equavalent to study notes. I go through every part of the sta
 
 The above `initVulkan()` function does what it says: it initializes Vulkan. In order to use Vulkan, an instance of the API must be created. This is an involved processes as you can see from the unholy number of functions. We'll go through them one by one. God forbid you get lost so hold my hand.
 
-### **Instances and Debugging**
+### **1. Instances and Debugging**
 
 We start at the start with `createInstance()`
 ```cpp
@@ -206,10 +206,80 @@ We loop through the `validationLayers` struct we specified earlier, for each mem
 
 There is a lot of other debugging code here, namely the debug callbacks but dear god I don't care. I just care that it works. Go to https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Validation_layers if you want to learn about that. 
 
+Now it's time to go through the rest of the `createInstance()` function.
+
+```cpp
+// optional but helpful information for the driver
+        VkApplicationInfo appInfo{};
+        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        appInfo.pApplicationName = "Hello Triangle";
+        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.pEngineName = "No Engine";
+        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+        appInfo.apiVersion = VK_API_VERSION_1_3;
+        // MANDATORY for instance creation
+        // Telling Vulkan what global (program) extensions and validations we want to use
+        VkInstanceCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 
 
+        // ADDING appInfo to createInfo
+        createInfo.pApplicationInfo = &appInfo;
+```
+Here we populate the `pApplicationInfo` member of the `VkInstanceCreateInfo` struct `createInfo`. I'll let the Vulkan spec explain the relevance of this:
+
+- `pApplicationInfo` is `NULL` or a pointer to a `VkApplicationInfo` structure. If not `NULL`, this
+information helps implementations recognize behavior inherent to classes of applications. (pg.100)
 
 
+```cpp
+        // Vulkan is platform agnostic. Here we provide the GLFW extension to interface with the window system
+        auto extensions = getRequiredExtensions();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+        createInfo.ppEnabledExtensionNames = extensions.data();
+
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+        if (enableValidationLayers) {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+
+            populateDebugMessengerCreateInfo(debugCreateInfo);
+            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
+        }
+        else {
+            createInfo.enabledLayerCount = 0;
+
+            createInfo.pNext = nullptr;
+        }
+
+        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create instance!");
+        }
+```
+Before creating an instance of Vulkan we need to pass it extension and layer information. We've created a validation layer so we need to inform Vulkan whether we have enabled or disabled it as well as bringing in any GLFW extensions we need. The code for this part is done in `getRequiredExtensions`. 
+
+After all this information has been collected into the `createInfo` struct, we can make a call to `vkCreateInstance()` and create the Vulkan instance. Congratulations, we can now use Vulkan. Sort of hahahahaahahaHAHAHAHAHahahaahHahaHAHaha **welcome to hell.**
+
+## **2. Surfaces**
+```cpp
+    void initVulkan() {
+        createInstance();
+        setupDebugMessenger();
+        createSurface(); // WE ARE HERE
+        pickPhysicalDevice();
+        createLogicalDevice();
+        createSwapChain();
+        createImageViews();
+        createRenderPass();
+        createGraphicsPipeline();
+        createFramebuffers();
+        createCommandPool();
+        createCommandBuffer();
+        createSyncObjects();
+    }
+```
+
+First thing we gotta do is create a variable to store the surface. This variable is of type `VkSurfaceKHR`. We do this at the top of the HelloTriangleApp class. 
 
 ## **Progress Report**
 

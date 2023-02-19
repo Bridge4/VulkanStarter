@@ -228,6 +228,7 @@ private:
     }
 
 
+    // SURFACES
     // GLFW WINDOW CREATION
     void initWindow() {
 

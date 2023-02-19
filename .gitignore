@@ -3,6 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Vulkan spec
+Vulkan_Spec.pdf
 # User-specific files
 *.rsuser
 *.suo
