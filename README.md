@@ -290,3 +290,7 @@ At first I saw nothing, now,  <b>*triangle*</b>.
 ![image](https://user-images.githubusercontent.com/33097098/219802681-8ceb1f40-cd0a-4ce3-a6a2-a239e98a4b15.png)
 
 It watches.
+
+### Date: February 19, 2023
+
+No longer hardcoding vertex data. Using vertex buffers. 
