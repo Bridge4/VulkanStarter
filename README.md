@@ -298,3 +298,9 @@ No longer hardcoding vertex data. Using vertex buffers.
 ![image](https://user-images.githubusercontent.com/33097098/219983754-3c6202aa-81fc-4629-b666-79c5d4850d0d.png)
 
 It watches still.
+
+Drawing using index buffers now!
+
+![image](https://user-images.githubusercontent.com/33097098/220008579-f3e03c34-fde2-4607-a39b-645885c89a9c.png)
+
+**They** watch.
