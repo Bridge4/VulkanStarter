@@ -782,7 +782,7 @@ private:
         // Backface culling enabled here
         rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
         // Determines draw order of a "front" face
-        rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
         // !! Will learn about this in the future !!
         rasterizer.depthBiasEnable = VK_FALSE;
         rasterizer.depthBiasConstantFactor = 0.0f; // Optional
@@ -1017,7 +1017,24 @@ private:
             bufferInfo.buffer = m_uniformBuffers[i];
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
+
+            VkWriteDescriptorSet descriptorWrite{};
+            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrite.dstSet = m_descriptorSets[i];
+            descriptorWrite.dstBinding = 0;
+            descriptorWrite.dstArrayElement = 0;
+
+            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrite.descriptorCount = 1;
+
+            descriptorWrite.pBufferInfo = &bufferInfo;
+            descriptorWrite.pImageInfo = nullptr; // Optional
+            descriptorWrite.pTexelBufferView = nullptr; // Optional
+
+            vkUpdateDescriptorSets(m_logical_device, 1, &descriptorWrite, 0, nullptr);
         }
+
+
     }
     
     // Buffer creation helper
@@ -1173,6 +1190,9 @@ private:
 
             vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
+                                    &m_descriptorSets[m_currentFrame], 0, nullptr);
+            
             /*
                 vkCmdDraw(VkCommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance)
 
