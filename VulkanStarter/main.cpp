@@ -5,6 +5,8 @@
 #include <GLFW/glfw3native.h>
 
 #define GLM_FORCE_RADIANS
+// To meet Vulkan data alignment specs
+#define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
@@ -135,10 +137,20 @@ const std::vector<uint16_t> indices = {
     0, 1, 2, 2, 3, 0
 };
 
+/*
+    VULKAN DATA ALIGNMENT SPECIFICATION:
+        - Scalars have to be aligned by N (= 4 bytes given 32 bit floats).
+        - A vec2 must be aligned by 2N (= 8 bytes)
+        - A vec3 or vec4 must be aligned by 4N (= 16 bytes)
+        - A nested structure must be aligned by the base alignment of its members rounded up to a multiple of 16.
+        - A mat4 matrix must have the same alignment as a vec4.
+
+    NOTE: It's good practice to be explicit about alignments since there are many cases as in nested structs that may cause issues in the shader
+*/
 struct UniformBufferObject {
-    glm::mat4 model;
-    glm::mat4 view;
-    glm::mat4 proj;
+    alignas(16) glm::mat4 model;
+    alignas(16) glm::mat4 view;
+    alignas(16) glm::mat4 proj;
 };
 
 class HelloTriangleApplication {
