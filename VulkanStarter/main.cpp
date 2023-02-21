@@ -7,6 +7,9 @@
 #define GLM_FORCE_RADIANS
 // To meet Vulkan data alignment specs
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+// Textures through stb library
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <chrono>
