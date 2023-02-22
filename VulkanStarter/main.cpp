@@ -68,10 +68,10 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
 struct Vertex {
     glm::vec2 pos;
     glm::vec3 color;
+    glm::vec2 texCoord;
 
     static VkVertexInputBindingDescription getBindingDescription() {
         VkVertexInputBindingDescription bindingDescription{};
-
         bindingDescription.binding = 0;
         bindingDescription.stride = sizeof(Vertex);
         /*
@@ -83,8 +83,8 @@ struct Vertex {
         return bindingDescription;
     }
 
-    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions{};
+    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
 
         // position description
         attributeDescriptions[0].location = 0;
@@ -109,6 +109,11 @@ struct Vertex {
         attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
         attributeDescriptions[1].offset = offsetof(Vertex, color);
 
+        attributeDescriptions[2].binding = 0;
+        attributeDescriptions[2].location = 2;
+        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+
         return attributeDescriptions;
     }
 };
@@ -129,11 +134,11 @@ struct SwapChainSupportDetails {
 };
 
 const std::vector<Vertex> vertices = {
-    //Position, Color
-    { {-0.5f,-0.5f}, {1.0f, 0.0f, 0.0f}},
-    { { 0.5f,-0.5f}, {0.0f, 1.0f, 0.0f}},
-    { { 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-    { {-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}
+    //Position, Color, TexCoord
+    {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+    {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+    {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}
 };
 
 const std::vector<uint16_t> indices = {
@@ -204,6 +209,9 @@ private:
     VkDeviceMemory m_indexBufferMemory;
 
     VkImage m_textureImage;
+    VkImageView m_textureImageView;
+    VkSampler m_textureSampler;
+
     VkDeviceMemory m_textureImageMemory;
 
     std::vector<VkBuffer> m_uniformBuffers;
@@ -262,9 +270,13 @@ private:
         createCommandPool();
 
         createTextureImage();
+        createTextureImageView();
+        createTextureSampler();
+
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
+
         createDescriptorPool();
         createDescriptorSets();
 
@@ -296,6 +308,8 @@ private:
     void cleanup() {
         cleanupSwapChain();
 
+        vkDestroySampler(m_logical_device, m_textureSampler, nullptr);
+        vkDestroyImageView(m_logical_device, m_textureImageView, nullptr);
         vkDestroyImage(m_logical_device, m_textureImage, nullptr);
         vkFreeMemory(m_logical_device, m_textureImageMemory, nullptr);
         
@@ -486,7 +500,7 @@ private:
             queueCreateInfos.push_back(queueCreateInfo);
         }
         VkPhysicalDeviceFeatures deviceFeatures{};
-
+        deviceFeatures.samplerAnisotropy = VK_TRUE;
         // Creating logical device
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -581,23 +595,7 @@ private:
         m_swapChainImageViews.resize(m_swapChainImages.size());
 
         for (size_t i = 0; i < m_swapChainImages.size(); i++) {
-            VkImageViewCreateInfo createInfo{};
-            createInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-            createInfo.image = m_swapChainImages[i];
-            createInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-            createInfo.format = m_swapChainImageFormat;
-            createInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-            createInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-            createInfo.subresourceRange.baseMipLevel = 0;
-            createInfo.subresourceRange.levelCount = 1;
-            createInfo.subresourceRange.baseArrayLayer = 0;
-            createInfo.subresourceRange.layerCount = 1;
-            if (vkCreateImageView(m_logical_device, &createInfo, nullptr, &m_swapChainImageViews[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create image views!");
-            }
+            m_swapChainImageViews[i] = createImageView(m_swapChainImages[i], m_swapChainImageFormat);
         }
     }
 
@@ -625,7 +623,8 @@ private:
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL : Images to be used as destination for a memory copy operation
 
             "The caveat of this special value is that the contents of the image are not guaranteed to be preserved,
-            but that doesn't matter since we're going to clear it anyway. We want the image to be ready for presentation using the swap chain after rendering,
+            but that doesn't matter since we're going to clear it anyway. 
+            We want the image to be ready for presentation using the swap chain after rendering,
             which is why we use VK_IMAGE_LAYOUT_PRESENT_SRC_KHR as finalLayout."
         */
 
@@ -678,6 +677,7 @@ private:
     }
     
     void createDescriptorSetLayout() {
+
         VkDescriptorSetLayoutBinding uboLayoutBinding{};
         uboLayoutBinding.binding = 0;
         uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -685,10 +685,18 @@ private:
         uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         uboLayoutBinding.pImmutableSamplers = nullptr; // Optional
 
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboLayoutBinding, samplerLayoutBinding };
         VkDescriptorSetLayoutCreateInfo layoutInfo{};
         layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = 1;
-        layoutInfo.pBindings = &uboLayoutBinding;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
 
         if (vkCreateDescriptorSetLayout(m_logical_device, &layoutInfo, nullptr, &m_descriptorSetLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor set layout!");
@@ -708,7 +716,6 @@ private:
         vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
 
         // IMPORTANT NOTE!!!
-
         /*
             The next two members specify the shader module containing the code, and the function to invoke, known as the entrypoint.
             That means that it's possible to combine multiple fragment shaders into a single shader module and use different entry
@@ -970,6 +977,64 @@ private:
     
     }
 
+
+    // TEXTURE IMAGE VIEW
+    void createTextureImageView() {
+        m_textureImageView = createImageView(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+    }
+
+    // TEXTURE SAMPLER
+    void createTextureSampler() {
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+
+        samplerInfo.anisotropyEnable = VK_TRUE;
+
+        VkPhysicalDeviceProperties properties{};
+        vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
+        samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
+
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerInfo.mipLodBias = 0.0f;
+        samplerInfo.minLod = 0.0f;
+        samplerInfo.maxLod = 0.0f;
+
+        if (vkCreateSampler(m_logical_device, &samplerInfo, nullptr, &m_textureSampler) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create texture sampler!");
+        }
+    }
+
+    VkImageView createImageView(VkImage image, VkFormat format) {
+        VkImageViewCreateInfo viewInfo{};
+        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        viewInfo.image = image;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format = format;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 1;
+
+        VkImageView imageView;
+        if (vkCreateImageView(m_logical_device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create texture image view!");
+        }
+
+        return imageView;
+    }
+
     // helper function used in createTextureImage();
     void createImage(uint32_t width, uint32_t height, VkFormat format, 
                      VkImageTiling tiling, VkImageUsageFlags usage, 
@@ -1172,15 +1237,22 @@ private:
 
     // DESCRIPTOR POOL
     void createDescriptorPool() {
-        VkDescriptorPoolSize poolSize{};
-        poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSize.descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+
+        /*
+            Incorrectly sized descriptor pools could result in errors on some devices but not others depending on the GPU drivers
+            Some will let you get away with bad allocations, some won't. Be careful.
+        */
+        
+        std::array<VkDescriptorPoolSize, 2> poolSizes{};
+        poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.poolSizeCount = 1;
-        poolInfo.pPoolSizes = &poolSize;
-
+        poolInfo.poolSizeCount = static_cast<uint32_t> (poolSizes.size());
+        poolInfo.pPoolSizes = poolSizes.data();
         poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
         if (vkCreateDescriptorPool(m_logical_device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
@@ -1208,20 +1280,32 @@ private:
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
 
-            VkWriteDescriptorSet descriptorWrite{};
-            descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            descriptorWrite.dstSet = m_descriptorSets[i];
-            descriptorWrite.dstBinding = 0;
-            descriptorWrite.dstArrayElement = 0;
+            VkDescriptorImageInfo imageInfo{};
+            imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            imageInfo.imageView = m_textureImageView;
+            imageInfo.sampler = m_textureSampler;
 
-            descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptorWrite.descriptorCount = 1;
+            std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+            descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[0].dstSet = m_descriptorSets[i];
+            descriptorWrites[0].dstBinding = 0;
+            descriptorWrites[0].dstArrayElement = 0;
+            descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorWrites[0].descriptorCount = 1;
+            descriptorWrites[0].pBufferInfo = &bufferInfo;
+            descriptorWrites[0].pImageInfo = nullptr; // Optional
+            descriptorWrites[0].pTexelBufferView = nullptr; // Optional
 
-            descriptorWrite.pBufferInfo = &bufferInfo;
-            descriptorWrite.pImageInfo = nullptr; // Optional
-            descriptorWrite.pTexelBufferView = nullptr; // Optional
+            descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorWrites[1].dstSet = m_descriptorSets[i];
+            descriptorWrites[1].dstBinding = 1;
+            descriptorWrites[1].dstArrayElement = 0;
+            descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            descriptorWrites[1].descriptorCount = 1;
+            descriptorWrites[1].pImageInfo = &imageInfo;
 
-            vkUpdateDescriptorSets(m_logical_device, 1, &descriptorWrite, 0, nullptr);
+
+            vkUpdateDescriptorSets(m_logical_device, descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
         }
 
 
@@ -1647,7 +1731,10 @@ private:
             swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
         }
 
-        return indices.isComplete() && extensionsSupported && swapChainAdequate;
+        VkPhysicalDeviceFeatures supportedFeatures;
+        vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
+        return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
     }
     
     bool checkdeviceExtensionSupport(VkPhysicalDevice device) {
