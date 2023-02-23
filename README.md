@@ -305,7 +305,7 @@ Drawing using index buffers now!
 
 **They** watch.
 
-## Date: February 22, 2023
+### Date: February 22, 2023
 
 Spinning quad with on of my favorite book's textured onto it!
 
@@ -313,4 +313,8 @@ Spinning quad with on of my favorite book's textured onto it!
 
 It tries to watch but is sick to the stomach with the spins. An unfortunate end to the primordial god. Madness.
 
+Depth Buffering works!!
 
+![depth_buff_spin_malaz3](https://user-images.githubusercontent.com/33097098/220800073-27804019-8e40-4358-a8a0-05f455ee79bd.gif)
+
+THEY TRY TO WATCH BUT THEY'RE SOOOOOOOOO DIZZY!
