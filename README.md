@@ -318,3 +318,9 @@ Depth Buffering works!!
 ![depth_buff_spin_malaz3](https://user-images.githubusercontent.com/33097098/220800073-27804019-8e40-4358-a8a0-05f455ee79bd.gif)
 
 THEY TRY TO WATCH BUT THEY'RE SOOOOOOOOO DIZZY!
+
+MODEL LOADING LETS GO
+
+![loaded_model_1](https://user-images.githubusercontent.com/33097098/220816097-6aebfd72-6c1c-470d-b6a7-c22c330f220f.gif)
+
+Mouse cursor cameo. He made it out safely, fear not reader.
