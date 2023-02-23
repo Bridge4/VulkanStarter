@@ -304,3 +304,13 @@ Drawing using index buffers now!
 ![image](https://user-images.githubusercontent.com/33097098/220008579-f3e03c34-fde2-4607-a39b-645885c89a9c.png)
 
 **They** watch.
+
+## Date: February 22, 2023
+
+Spinning quad with on of my favorite book's textured onto it!
+
+![spinning malaz](https://user-images.githubusercontent.com/33097098/220776132-819a972a-f7a0-46f6-89ae-863e26bb6689.gif)
+
+It tries to watch but is sick to the stomach with the spins. An unfortunate end to the primordial god. Madness.
+
+
