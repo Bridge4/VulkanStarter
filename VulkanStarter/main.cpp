@@ -35,7 +35,6 @@
 #include <fstream>
 #include <glm/glm.hpp>
 #include <unordered_map>
-//#include "Instance.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -175,7 +174,6 @@ struct UniformBufferObject {
 };
 
 
-
 class HelloTriangleApplication {
 public:
     void run() {
@@ -279,17 +277,19 @@ private:
     // INITIALIZING VULKAN INSTANCE
     void initVulkan() {
 
+        // Initialization
         createInstance();
         setupDebugMessenger();
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
+
+        // Rendering
         createSwapChain();
         createImageViews();
         createRenderPass();
         createDescriptorSetLayout();
         createGraphicsPipeline();
-        
         createCommandPool();
         createDepthResources();
         createFramebuffers();
@@ -369,20 +369,17 @@ private:
             vkDestroyFence(m_logical_device, m_inFlightFences[i], nullptr);
         }
 
+        // DEVICE DESTRUCTION
         vkDestroyCommandPool(m_logical_device, m_commandPool, nullptr);
-
         vkDestroyDevice(m_logical_device, nullptr);
-
-
         if (enableValidationLayers) {
             DestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
         }
-
         vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
         vkDestroyInstance(m_instance, nullptr);
 
+        // GLFW DESTRUCTION
         glfwDestroyWindow(m_glfw_window);
-
         glfwTerminate();
     }
     
@@ -520,7 +517,6 @@ private:
         return VK_FALSE;
     }
 
-
     // SURFACES
     void createSurface() {
         if (glfwCreateWindowSurface(m_instance, m_glfw_window, nullptr, &m_surface) != VK_SUCCESS) {
@@ -580,6 +576,35 @@ private:
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
 
         return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
+    }
+
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
+
+        // Fetching the capabilities of the device and surface
+
+
+        // Getting supported surface formats
+        SwapChainSupportDetails details;
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &details.capabilities);
+
+        uint32_t formatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, nullptr);
+
+        if (formatCount != 0) {
+            details.formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, details.formats.data());
+        }
+
+        // Getting supported present modes
+        uint32_t presentModeCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, nullptr);
+
+        if (presentModeCount != 0) {
+            details.presentModes.resize(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, details.presentModes.data());
+        }
+
+        return details;
     }
 
     // QUEUE FAMILIES
@@ -679,6 +704,7 @@ private:
         vkGetDeviceQueue(m_logical_device, indices.presentFamily.value(), 0, &m_presentQueue);
 
     }
+
 
     // SWAP CHAINS
     void createSwapChain() {
@@ -1960,36 +1986,7 @@ private:
         }
     }
 
-    // SWAP CHAINS
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
-
-        // Fetching the capabilities of the device and surface
-
-
-        // Getting supported surface formats
-        SwapChainSupportDetails details;
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &details.capabilities);
-
-        uint32_t formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, nullptr);
-
-        if (formatCount != 0) {
-            details.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_surface, &formatCount, details.formats.data());
-        }
-
-        // Getting supported present modes
-        uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, nullptr);
-
-        if (presentModeCount != 0) {
-            details.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_surface, &presentModeCount, details.presentModes.data());
-        }
-
-
-        return details;
-    }
+    
 
     // Reading in SPIRV shaders
     static std::vector<char> readFile(const std::string& filename) {
@@ -2011,8 +2008,6 @@ private:
 
         return buffer;
     }
-
-    
 };
 
 int main() {
