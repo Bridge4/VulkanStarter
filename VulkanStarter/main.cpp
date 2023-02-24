@@ -253,12 +253,20 @@ private:
 
     // INITIALIZING VULKAN INSTANCE
     void initVulkan() {
-        // Initialization
+
+    // Initialization
+        // init.instance();
+        // init.debugMessenger();
+        // init.surface();
+        // init.physDevice();
+        // init.logDevice();
         createInstance();
         setupDebugMessenger();
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
+
+
 
         // Rendering
         createSwapChain();
