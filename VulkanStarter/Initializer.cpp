@@ -61,10 +61,8 @@ void Initializer::setupDebugMessenger() {
     }
 }
 
-void Initializer::createSurface() {
-    if (glfwCreateWindowSurface(m_instance, m_glfw_window, nullptr, &r_surface) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create window surface!");
-    }
+void Initializer::createSurface(Window window) {
+    window.createSurface(m_instance, &r_surface);
 }
 
 void Initializer::pickPhysicalDevice() {
@@ -142,9 +140,6 @@ void Initializer::createLogicalDevice() {
 
 }
 
-
-
-
 // HELPERS
 
 // createInstance()
@@ -173,6 +168,7 @@ bool Initializer::checkValidationLayerSupport() {
 
     return true;
 }
+
 std::vector<const char*> Initializer::getRequiredExtensions() {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
@@ -186,6 +182,7 @@ std::vector<const char*> Initializer::getRequiredExtensions() {
 
     return extensions;
 }
+
 void Initializer::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
     createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
