@@ -7,7 +7,7 @@
 #include <vector>
 #include <optional>
 #include <cstdint> // Necessary for uint32_t
-#include "Window.h"
+#include "Window.hpp"
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;

@@ -1,4 +1,4 @@
-#include "Window.h"
+#include "Window.hpp"
 
 VkResult Window::createSurface(VkInstance instance, VkSurfaceKHR* surface, VkAllocationCallbacks* allocationCallbacks)
 {
