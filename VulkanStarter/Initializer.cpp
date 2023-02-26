@@ -2,6 +2,27 @@
 
 // CORE FUNCTIONS
 
+
+void Initializer::init(Window* window)
+{
+    createInstance();
+    createDebugMessenger();
+    if (window->createSurface(m_instance, &r_surface) != VK_SUCCESS)
+        throw std::runtime_error("failed to create window surface!");
+    pickPhysicalDevice();
+    createLogicalDevice();
+}
+
+
+void Initializer::destroy() {
+    vkDestroyDevice(r_device, nullptr);
+    if (enableValidationLayers) {
+        DestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
+    }
+    vkDestroySurfaceKHR(m_instance, r_surface, nullptr);
+    vkDestroyInstance(m_instance, nullptr);
+}
+
 void Initializer::createInstance() {
     // A lot of information is passed through structs rather than function parameters
     if (enableValidationLayers && !checkValidationLayerSupport()) {
@@ -50,7 +71,7 @@ void Initializer::createInstance() {
     }
 }
 
-void Initializer::setupDebugMessenger() {
+void Initializer::createDebugMessenger() {
     if (!enableValidationLayers) return;
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo;
@@ -80,19 +101,19 @@ void Initializer::pickPhysicalDevice() {
 
     for (const auto& device : devices) {
         if (isDeviceSuitable(device)) {
-            m_physicalDevice = device;
+            r_physicalDevice = device;
             break;
         }
     }
 
-    if (m_physicalDevice == VK_NULL_HANDLE) {
+    if (r_physicalDevice == VK_NULL_HANDLE) {
         throw std::runtime_error("failed to find a suitable GPU!");
     }
 }
 
 void Initializer::createLogicalDevice() {
     // Specifying queues to be created
-    QueueFamilyIndices indices = findQueueFamilies(m_physicalDevice);
+    QueueFamilyIndices indices = findQueueFamilies(r_physicalDevice);
     VkDeviceQueueCreateInfo queueCreateInfo{};
     queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
@@ -112,12 +133,12 @@ void Initializer::createLogicalDevice() {
     }
     VkPhysicalDeviceFeatures deviceFeatures{};
     deviceFeatures.samplerAnisotropy = VK_TRUE;
+
     // Creating logical device
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
-
     createInfo.pEnabledFeatures = &deviceFeatures;
 
     // COMPATIBILITY WITH OLDER VULKAN
@@ -131,7 +152,7 @@ void Initializer::createLogicalDevice() {
         createInfo.enabledLayerCount = 0;
     }
 
-    if (vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &r_device) != VK_SUCCESS) {
+    if (vkCreateDevice(r_physicalDevice, &createInfo, nullptr, &r_device) != VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
 
@@ -303,12 +324,20 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Initializer::debugCallback(VkDebugUtilsMessageSev
 }
 
 // setupDebugMessenger()
-VkResult Initializer::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+VkResult Initializer::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
+    const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr) {
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
     }
     else {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+void Initializer::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        func(instance, debugMessenger, pAllocator);
     }
 }
