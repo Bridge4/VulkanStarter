@@ -36,8 +36,11 @@
 #include <fstream>
 #include <glm/glm.hpp>
 #include <unordered_map>
-#include "Window.h"
+
+#include "Window.hpp"
 #include "Initializer.hpp"
+#include "ImageView.hpp"
+
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -171,7 +174,6 @@ private:
     std::vector<VkFramebuffer> m_swapChainFramebuffers;
     VkCommandPool m_commandPool;
 
-
     std::vector<Vertex> m_vertices;
     std::vector<uint32_t> m_indices;
 
@@ -215,9 +217,9 @@ private:
         
         // Rendering
         createSwapChain();
-        createImageViews();
+        createSwapChainImageViews();
+        
         createRenderPass();
-
         createDescriptorSetLayout();
         createGraphicsPipeline();
         createCommandPool();
@@ -248,62 +250,6 @@ private:
         vkDeviceWaitIdle(m_logical_device);
     }
 
-    void cleanupSwapChain() {
-        vkDestroyImageView(m_logical_device, m_depthImageView, nullptr);
-        vkDestroyImage(m_logical_device, m_depthImage, nullptr);
-        vkFreeMemory(m_logical_device, m_depthImageMemory, nullptr);
-
-        for (auto framebuffer : m_swapChainFramebuffers) {
-            vkDestroyFramebuffer(m_logical_device, framebuffer, nullptr);
-        }
-
-        for (auto imageView : m_swapChainImageViews) {
-            vkDestroyImageView(m_logical_device, imageView, nullptr);
-        }
-
-        vkDestroySwapchainKHR(m_logical_device, m_swapChain, nullptr);
-    }
-
-    // CLEANUP
-    void cleanup() {
-        cleanupSwapChain();
-
-        vkDestroySampler(m_logical_device, m_textureSampler, nullptr);
-        vkDestroyImageView(m_logical_device, m_textureImageView, nullptr);
-        vkDestroyImage(m_logical_device, m_textureImage, nullptr);
-        vkFreeMemory(m_logical_device, m_textureImageMemory, nullptr);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroyBuffer(m_logical_device, m_uniformBuffers[i], nullptr);
-            vkFreeMemory(m_logical_device, m_uniformBuffersMemory[i], nullptr);
-        }
-
-        vkDestroyDescriptorPool(m_logical_device, m_descriptorPool, nullptr);
-
-        vkDestroyDescriptorSetLayout(m_logical_device, m_descriptorSetLayout, nullptr);
-
-        // Buffer cleanup
-        vkDestroyBuffer(m_logical_device, m_indexBuffer, nullptr);
-        vkFreeMemory(m_logical_device, m_indexBufferMemory, nullptr);
-        vkDestroyBuffer(m_logical_device, m_vertexBuffer, nullptr);
-        vkFreeMemory(m_logical_device, m_vertexBufferMemory, nullptr);
-
-        vkDestroyPipeline(m_logical_device, m_graphicsPipeline, nullptr);
-        vkDestroyPipelineLayout(m_logical_device, m_pipelineLayout, nullptr);
-
-        vkDestroyRenderPass(m_logical_device, m_renderPass, nullptr);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroySemaphore(m_logical_device, m_renderFinishedSemaphores[i], nullptr);
-            vkDestroySemaphore(m_logical_device, m_imageAvailableSemaphores[i], nullptr);
-            vkDestroyFence(m_logical_device, m_inFlightFences[i], nullptr);
-        }
-        vkDestroyCommandPool(m_logical_device, m_commandPool, nullptr);
-        // DEVICE DESTRUCTION
-        init.destroy();
-        // GLFW DESTRUCTION
-        window.destroy();
-    }
 
     void recreateSwapChain() {
         // Handling minimization
@@ -314,7 +260,7 @@ private:
         cleanupSwapChain();
 
         createSwapChain();
-        createImageViews();
+        createSwapChainImageViews();
         createDepthResources();
         createFramebuffers();
     }
@@ -381,12 +327,11 @@ private:
     }
 
     // IMAGE VIEWS
-    void createImageViews() {
-
+    void createSwapChainImageViews() {
         m_swapChainImageViews.resize(m_swapChainImages.size());
-
         for (size_t i = 0; i < m_swapChainImages.size(); i++) {
-            m_swapChainImageViews[i] = createImageView(m_swapChainImages[i], m_swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+            // Moved definition for createImageView() to a class and turned into a static function
+            m_swapChainImageViews[i] = ImageView::create(m_logical_device, m_swapChainImages[i], m_swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
         }
     }
 
@@ -641,7 +586,6 @@ private:
         depthStencil.front = {}; // Optional
         depthStencil.back = {}; // Optional
 
-
         VkPipelineColorBlendAttachmentState colorBlendAttachment{};
         colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         colorBlendAttachment.blendEnable = VK_TRUE;
@@ -754,7 +698,7 @@ private:
         createImage(m_swapChainExtent.width, m_swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
             m_depthImage, m_depthImageMemory);
-        m_depthImageView = createImageView(m_depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
+        m_depthImageView = ImageView::create(m_logical_device, m_depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
         transitionImageLayout(m_depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     }
@@ -766,6 +710,7 @@ private:
             VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
         );
     }
+
     // used by findDepthFormat()
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
         for (VkFormat format : candidates) {
@@ -825,10 +770,9 @@ private:
 
     }
 
-
     // TEXTURE IMAGE VIEW
     void createTextureImageView() {
-        m_textureImageView = createImageView(m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_textureImageView = ImageView::create(m_logical_device, m_textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT);
     }
 
     // TEXTURE SAMPLER
@@ -863,25 +807,6 @@ private:
         }
     }
 
-    VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags) {
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = image;
-        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        viewInfo.format = format;
-        viewInfo.subresourceRange.aspectMask = aspectFlags;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = 1;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = 1;
-
-        VkImageView imageView;
-        if (vkCreateImageView(m_logical_device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create texture image view!");
-        }
-
-        return imageView;
-    }
 
     // helper function used in createTextureImage();
     void createImage(uint32_t width, uint32_t height, VkFormat format,
@@ -1615,6 +1540,64 @@ private:
 
         return buffer;
     }
+
+    void cleanupSwapChain() {
+        vkDestroyImageView(m_logical_device, m_depthImageView, nullptr);
+        vkDestroyImage(m_logical_device, m_depthImage, nullptr);
+        vkFreeMemory(m_logical_device, m_depthImageMemory, nullptr);
+
+        for (auto framebuffer : m_swapChainFramebuffers) {
+            vkDestroyFramebuffer(m_logical_device, framebuffer, nullptr);
+        }
+
+        for (auto imageView : m_swapChainImageViews) {
+            vkDestroyImageView(m_logical_device, imageView, nullptr);
+        }
+
+        vkDestroySwapchainKHR(m_logical_device, m_swapChain, nullptr);
+    }
+
+    // CLEANUP
+    void cleanup() {
+        cleanupSwapChain();
+
+        vkDestroySampler(m_logical_device, m_textureSampler, nullptr);
+        vkDestroyImageView(m_logical_device, m_textureImageView, nullptr);
+        vkDestroyImage(m_logical_device, m_textureImage, nullptr);
+        vkFreeMemory(m_logical_device, m_textureImageMemory, nullptr);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            vkDestroyBuffer(m_logical_device, m_uniformBuffers[i], nullptr);
+            vkFreeMemory(m_logical_device, m_uniformBuffersMemory[i], nullptr);
+        }
+
+        vkDestroyDescriptorPool(m_logical_device, m_descriptorPool, nullptr);
+
+        vkDestroyDescriptorSetLayout(m_logical_device, m_descriptorSetLayout, nullptr);
+
+        // Buffer cleanup
+        vkDestroyBuffer(m_logical_device, m_indexBuffer, nullptr);
+        vkFreeMemory(m_logical_device, m_indexBufferMemory, nullptr);
+        vkDestroyBuffer(m_logical_device, m_vertexBuffer, nullptr);
+        vkFreeMemory(m_logical_device, m_vertexBufferMemory, nullptr);
+
+        vkDestroyPipeline(m_logical_device, m_graphicsPipeline, nullptr);
+        vkDestroyPipelineLayout(m_logical_device, m_pipelineLayout, nullptr);
+
+        vkDestroyRenderPass(m_logical_device, m_renderPass, nullptr);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            vkDestroySemaphore(m_logical_device, m_renderFinishedSemaphores[i], nullptr);
+            vkDestroySemaphore(m_logical_device, m_imageAvailableSemaphores[i], nullptr);
+            vkDestroyFence(m_logical_device, m_inFlightFences[i], nullptr);
+        }
+        vkDestroyCommandPool(m_logical_device, m_commandPool, nullptr);
+        // DEVICE DESTRUCTION
+        init.destroy();
+        // GLFW DESTRUCTION
+        window.destroy();
+    }
+
 };
 
 int main() {
