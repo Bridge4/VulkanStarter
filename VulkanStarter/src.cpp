@@ -42,7 +42,6 @@
 #include "ImageView.hpp"
 #include "SwapChain.hpp"
 
-
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 const std::string MODEL_PATH = "models/model.obj";
@@ -1436,7 +1435,7 @@ private:
     }
 
 
-        void cleanupSwapChain() {
+    void cleanupSwapChain() {
         vkDestroyImageView(m_logical_device, m_depthImageView, nullptr);
         vkDestroyImage(m_logical_device, m_depthImage, nullptr);
         vkFreeMemory(m_logical_device, m_depthImageMemory, nullptr);
