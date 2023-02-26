@@ -151,7 +151,6 @@ private:
     VkDevice m_logical_device;
     VkQueue m_graphicsQueue;
     VkQueue m_presentQueue;
-    
 
 
     VkSwapchainKHR m_swapChain;
@@ -218,6 +217,7 @@ private:
         createSwapChain();
         createImageViews();
         createRenderPass();
+
         createDescriptorSetLayout();
         createGraphicsPipeline();
         createCommandPool();
@@ -300,14 +300,6 @@ private:
         }
         vkDestroyCommandPool(m_logical_device, m_commandPool, nullptr);
         // DEVICE DESTRUCTION
-        /*
-            vkDestroyDevice(m_logical_device, nullptr);
-            if (enableValidationLayers) {
-                DestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
-            }
-            vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
-            vkDestroyInstance(m_instance, nullptr);
-        */
         init.destroy();
         // GLFW DESTRUCTION
         window.destroy();
@@ -336,7 +328,6 @@ private:
         VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
         VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
         VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
-
 
         // the reason we do +1 is because we will have to wait for the driver to complete internal operations before acquiring another image.
         uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
@@ -775,7 +766,7 @@ private:
             VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
         );
     }
-
+    // used by findDepthFormat()
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) {
         for (VkFormat format : candidates) {
             VkFormatProperties props;
@@ -787,7 +778,6 @@ private:
                 return format;
             }
         }
-
         throw std::runtime_error("failed to find supported format!");
     }
 
@@ -1410,8 +1400,6 @@ private:
 
         /*
             vkCmdDraw(VkCommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance)
-
-
             vertexCount: Even though we don't have a vertex buffer, we technically still have 3 vertices to draw.
             instanceCount: Used for instanced rendering, use 1 if you're not doing that.
             firstVertex: Used as an offset into the vertex buffer, defines the lowest value of gl_VertexIndex.
