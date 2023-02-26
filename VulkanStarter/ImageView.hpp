@@ -7,6 +7,6 @@
 class ImageView
 {
 public: 
-    static VkImageView create(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
+    VkImageView create(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 };
 
