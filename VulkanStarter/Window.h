@@ -9,7 +9,7 @@ class Window
 public:
     bool framebufferResized = false;
 
-    ~Window();
+    void destroy();
 
     void handleMinimization();
 
@@ -23,12 +23,12 @@ public:
 
     VkResult createSurface(VkInstance instance, VkSurfaceKHR* surface, VkAllocationCallbacks* allocationCallbacks=nullptr);
 
-    void createWindow(int w = 800, int h = 600);
+    void createWindow(uint32_t w = 800, uint32_t h = 600);
 
 private:
     GLFWwindow* r_window;
 
-    int m_width, m_height;
+    uint32_t m_width, m_height;
     
     // HELPERS
 

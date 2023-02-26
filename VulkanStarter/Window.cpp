@@ -5,7 +5,7 @@ VkResult Window::createSurface(VkInstance instance, VkSurfaceKHR* surface, VkAll
     return glfwCreateWindowSurface(instance, r_window, nullptr, surface);
 }
 
-void Window::createWindow(int w, int h) {
+void Window::createWindow(uint32_t w, uint32_t h) {
     m_width = w, m_height = h;
     // GLFW creates an OpenGL context so we need to undo that
     glfwInit();
@@ -38,8 +38,7 @@ void Window::getFramebufferSize(int* width, int* height)
     glfwGetFramebufferSize(r_window, width, height);
 }
 
-Window::~Window()
-{
+void Window::destroy() {
     glfwDestroyWindow(r_window);
     glfwTerminate();
 }
