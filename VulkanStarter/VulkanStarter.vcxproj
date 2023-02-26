@@ -151,13 +151,15 @@
   <ItemGroup>
     <ClCompile Include="ImageView.cpp" />
     <ClCompile Include="Initializer.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="src.cpp" />
+    <ClCompile Include="SwapChain.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Devices.h" />
     <ClInclude Include="ImageView.hpp" />
     <ClInclude Include="Initializer.hpp" />
+    <ClInclude Include="SwapChain.hpp" />
     <ClInclude Include="Window.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
