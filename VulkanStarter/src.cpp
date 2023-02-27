@@ -157,12 +157,6 @@ private:
     VkQueue m_graphicsQueue;
     VkQueue m_presentQueue;
 
-    /*
-    
-    std::vector<VkImage> m_swapChainImages;
-    
-    
-    */
     VkSwapchainKHR m_swapChain;
     VkFormat m_swapChainImageFormat;
     VkExtent2D m_swapChainExtent;
@@ -280,7 +274,7 @@ private:
         cleanupSwapChain();
 
         swapChain.create(&init, &window);
-        swapChain.createImageViews(m_logical_device, &imageView);
+        swapChain.createImageViews(m_logical_device, imageView);
         createDepthResources();
         createFramebuffers();
     }
