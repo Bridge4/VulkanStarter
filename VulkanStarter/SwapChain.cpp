@@ -1,16 +1,16 @@
 #include "SwapChain.hpp"
 
 
-void SwapChain::create(Initializer* init, Window* window) {
-    VkPhysicalDevice physDevice = init->physDevice();
-    VkDevice device = init->logDevice();
-    VkSurfaceKHR surface = init->surface();
+void SwapChain::create(Initializer init, Window window) {
+    VkPhysicalDevice physDevice = init.physDevice();
+    VkDevice device = init.logDevice();
+    VkSurfaceKHR surface = init.surface();
 
-    SwapChainSupportDetails swapChainSupport = init->querySwapChainSupport(physDevice);
+    SwapChainSupportDetails swapChainSupport = init.querySwapChainSupport(physDevice);
 
     VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
     VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-    VkExtent2D extent = chooseSwapExtent(*window, swapChainSupport.capabilities);
+    VkExtent2D extent = chooseSwapExtent(window, swapChainSupport.capabilities);
 
     // the reason we do +1 is because we will have to wait for the driver to complete internal operations before acquiring another image.
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
@@ -30,7 +30,7 @@ void SwapChain::create(Initializer* init, Window* window) {
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    QueueFamilyIndices indices = init->findQueueFamilies(physDevice);
+    QueueFamilyIndices indices = init.findQueueFamilies(physDevice);
     uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
 
     if (indices.graphicsFamily != indices.presentFamily) {

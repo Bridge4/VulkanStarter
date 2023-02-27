@@ -14,7 +14,7 @@
 class SwapChain
 {
 public: 
-    void create(Initializer* init, Window* window);
+    void create(Initializer init, Window window);
 
     void createImageViews(VkDevice device, ImageView imgV);
 
