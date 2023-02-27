@@ -64,11 +64,11 @@ void SwapChain::create(Initializer* init, Window* window) {
 }
 
 // IMAGE VIEWS
-void SwapChain::createImageViews(VkDevice device, ImageView* imgV) {
+void SwapChain::createImageViews(VkDevice device, ImageView imgV) {
     m_swapChainImageViews.resize(m_swapChainImages.size());
     for (size_t i = 0; i < m_swapChainImages.size(); i++) {
         // Moved definition for createImageView() to a class and turned into a static function
-        m_swapChainImageViews[i] = imgV->create(device, m_swapChainImages[i], m_swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
+        m_swapChainImageViews[i] = imgV.create(device, m_swapChainImages[i], m_swapChainImageFormat, VK_IMAGE_ASPECT_COLOR_BIT);
     }
 }
 
