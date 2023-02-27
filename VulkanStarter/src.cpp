@@ -209,28 +209,12 @@ private:
 
         // Initialization
         init.init(&window);
-        m_surface = init.surface();
-        m_physicalDevice = init.physDevice();
-        m_logical_device = init.logDevice();
-        m_graphicsQueue = init.graphicsQueue();
-        m_presentQueue = init.presentQueue();
+        init.assign(&m_surface, &m_physicalDevice, &m_logical_device, &m_graphicsQueue, &m_presentQueue);
         
-        // Rendering
-        /*
-        VkSwapchainKHR m_swapChain;
-        std::vector<VkImage> m_swapChainImages;
-        VkFormat m_swapChainImageFormat;
-        VkExtent2D m_swapChainExtent;
-        std::vector<VkImageView> m_swapChainImageViews;
-        
-        //createSwapChain();
-        //createSwapChainImageViews()
-        */
-        swapChain.create(&init, &window);
-        m_swapChain = swapChain.get();
-        m_swapChainImageFormat = swapChain.getImageFormat();
-        m_swapChainExtent = swapChain.getExtent();
-        m_swapChainImageViews = swapChain.getImageViews();
+        // Swap Chain
+        swapChain.create(init, window);
+        swapChain.createImageViews(m_logical_device, imageView);
+        swapChain.assign(&m_swapChain, &m_swapChainImageFormat, &m_swapChainExtent, &m_swapChainImageViews);
         
         
         createRenderPass();
@@ -273,8 +257,10 @@ private:
 
         cleanupSwapChain();
 
-        swapChain.create(&init, &window);
+        swapChain.create(init, window);
         swapChain.createImageViews(m_logical_device, imageView);
+        swapChain.assign(&m_swapChain, &m_swapChainImageFormat, &m_swapChainExtent, &m_swapChainImageViews);
+
         createDepthResources();
         createFramebuffers();
     }
@@ -608,6 +594,7 @@ private:
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             framebufferInfo.renderPass = m_renderPass;
             framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            framebufferInfo.pAttachments = attachments.data();
             framebufferInfo.pAttachments = attachments.data();
             framebufferInfo.width = m_swapChainExtent.width;
             framebufferInfo.height = m_swapChainExtent.height;
@@ -1227,7 +1214,7 @@ private:
         renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         renderPassInfo.renderPass = m_renderPass;
         // DEBUG
-        printf("imageIndex DEBUG: %d\n", imageIndex);
+        //printf("imageIndex DEBUG: %d\n", imageIndex);
         renderPassInfo.framebuffer = m_swapChainFramebuffers[imageIndex];
         renderPassInfo.renderArea.offset = { 0, 0 };
         renderPassInfo.renderArea.extent = m_swapChainExtent;

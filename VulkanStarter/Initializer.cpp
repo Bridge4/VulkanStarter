@@ -13,6 +13,15 @@ void Initializer::init(Window* window)
     createLogicalDevice();
 }
 
+void Initializer::assign(VkSurfaceKHR* rSurface, VkPhysicalDevice* pDevice, VkDevice* device, VkQueue* gQueue, VkQueue* pQueue)
+{
+    *rSurface = surface();
+    *pDevice = physDevice();
+    *device = logDevice();
+    *gQueue = graphicsQueue();
+    *pQueue = presentQueue();
+}
+
 
 void Initializer::destroy() {
     vkDestroyDevice(r_device, nullptr);

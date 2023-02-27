@@ -37,6 +37,8 @@ public:
 
     void init(Window* window);
 
+    void assign(VkSurfaceKHR* rSurface, VkPhysicalDevice* pDevice, VkDevice* device, VkQueue* gQueue, VkQueue* pQueue);
+
     VkSurfaceKHR surface() { return r_surface; }
 
     VkPhysicalDevice physDevice() { return r_physicalDevice; }
