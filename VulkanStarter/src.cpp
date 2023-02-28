@@ -145,12 +145,13 @@ public:
 
 private:
 
+    // INSTANCES
     Initializer init;
     Window window;
     SwapChain swapChain;
     ImageView imageView;
     
-    //VkInstance m_instance = init.instance();
+
     VkSurfaceKHR m_surface;
     VkPhysicalDevice m_physicalDevice;
     VkDevice m_logical_device;
@@ -216,11 +217,11 @@ private:
         swapChain.createImageViews(m_logical_device, imageView);
         swapChain.assign(&m_swapChain, &m_swapChainImageFormat, &m_swapChainExtent, &m_swapChainImageViews);
         
-        
         createRenderPass();
         createDescriptorSetLayout();
         createGraphicsPipeline();
         createCommandPool();
+
         createDepthResources();
         createFramebuffers();
 
@@ -699,7 +700,6 @@ private:
 
         vkDestroyBuffer(m_logical_device, stagingBuffer, nullptr);
         vkFreeMemory(m_logical_device, stagingBufferMemory, nullptr);
-
     }
 
     // TEXTURE IMAGE VIEW
