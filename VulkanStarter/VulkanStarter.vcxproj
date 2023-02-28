@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClCompile Include="ImageView.cpp" />
     <ClCompile Include="Initializer.cpp" />
+    <ClCompile Include="RenderPass.cpp" />
     <ClCompile Include="src.cpp" />
     <ClCompile Include="SwapChain.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="Devices.h" />
     <ClInclude Include="ImageView.hpp" />
     <ClInclude Include="Initializer.hpp" />
+    <ClInclude Include="RenderPass.hpp" />
     <ClInclude Include="SwapChain.hpp" />
     <ClInclude Include="Window.hpp" />
   </ItemGroup>
