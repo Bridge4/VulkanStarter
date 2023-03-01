@@ -149,6 +149,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CommandStructure.cpp" />
     <ClCompile Include="GraphicsPipeline.cpp" />
     <ClCompile Include="ImageView.cpp" />
     <ClCompile Include="Initializer.cpp" />
@@ -159,6 +160,7 @@
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommandStructure.hpp" />
     <ClInclude Include="Devices.h" />
     <ClInclude Include="GraphicsPipeline.hpp" />
     <ClInclude Include="ImageView.hpp" />
