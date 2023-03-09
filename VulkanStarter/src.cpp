@@ -44,6 +44,7 @@
 #include "SwapChain.hpp"
 #include "RenderPass.hpp"
 #include "GraphicsPipeline.hpp"
+#include "CommandStructure.hpp"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -84,6 +85,7 @@ private:
     ImageView imageView;
     RenderPass renderPass;
     GraphicsPipeline graphicsPipeline;
+    CommandStructure commandStructure;
 
     VkSurfaceKHR m_surface;
     VkPhysicalDevice m_physicalDevice;
@@ -170,14 +172,8 @@ private:
         createTextureSampler();
 
         loadModel();
-
-        
-        //buffer.create(m_logical_device, m_vertices, m_vertexBuffer, m_vertexBufferMemory);
-        //buffer.create(m_logical_device, m_indices, m_indexBuffer, m_indexBufferMemory);
-        
         createVertexBuffer();
         createIndexBuffer();
-        
         createUniformBuffers();
 
         createDescriptorPool();
@@ -241,7 +237,16 @@ private:
         }
     }
 
-    
+    // SWAPCHAIN FRAME BUFFERS
+    void createFramebuffers() {
+        m_swapChainFramebuffers.resize(m_swapChainImageViews.size());
+
+        // Loop through swap chain image views
+        for (size_t i = 0; i < m_swapChainImageViews.size(); i++) {
+            std::array<VkImageView, 2> attachments = {
+                m_swapChainImageViews[i],
+                m_depthImageView
+            };
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
@@ -256,25 +261,6 @@ private:
             if (vkCreateFramebuffer(m_logical_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create framebuffer!");
             }
-        }
-    }
-
-    // COMMAND POOL
-    /*
-        Command pools manage the memory used to store command buffers
-        Allows for multithreaded command recording since all commands are available together in the buffers
-    */
-    void createCommandPool() {
-        QueueFamilyIndices queueFamilyIndices = init.findQueueFamilies(m_physicalDevice);
-
-        VkCommandPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        // Selecting graphicsFamily in order to issue draw commands in this command pool
-        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-        if (vkCreateCommandPool(m_logical_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create command pool!");
         }
     }
 
@@ -555,32 +541,6 @@ private:
             }
         }
     }
-    // SWAPCHAIN FRAME BUFFERS
-    void createFramebuffers() {
-        m_swapChainFramebuffers.resize(m_swapChainImageViews.size());
-
-        // Loop through swap chain image views
-        for (size_t i = 0; i < m_swapChainImageViews.size(); i++) {
-            std::array<VkImageView, 2> attachments = {
-                m_swapChainImageViews[i],
-                m_depthImageView
-            };
-
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = m_renderPass;
-            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = m_swapChainExtent.width;
-            framebufferInfo.height = m_swapChainExtent.height;
-            framebufferInfo.layers = 1;
-
-            if (vkCreateFramebuffer(m_logical_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create framebuffer!");
-            }
-        }
-    }
 
     // VERTEX BUFFER
     void createVertexBuffer() {
@@ -623,10 +583,7 @@ private:
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
-        createBuffer(bufferSize, 
-            VK_BUFFER_USAGE_TRANSFER_SRC_BIT, 
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-            stagingBuffer, stagingBufferMemory);
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
         void* data;
         vkMapMemory(m_logical_device, stagingBufferMemory, 0, bufferSize, 0, &data);
@@ -727,8 +684,10 @@ private:
             descriptorWrites[1].pImageInfo = &imageInfo;
 
 
-            vkUpdateDescriptorSets(m_logical_device, static_cast <uint32_t> (descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
+            vkUpdateDescriptorSets(m_logical_device, descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
         }
+
+
     }
 
     // Buffer creation helper
@@ -1104,6 +1063,7 @@ private:
         // GLFW DESTRUCTION
         window.destroy();
     }
+
 };
 
 int main() {
