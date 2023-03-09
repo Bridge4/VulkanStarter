@@ -44,8 +44,6 @@
 #include "SwapChain.hpp"
 #include "RenderPass.hpp"
 #include "GraphicsPipeline.hpp"
-#include "CommandStructure.hpp"
-#include "Buffer.hpp"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -53,6 +51,8 @@ const std::string MODEL_PATH = "models/model.obj";
 const std::string TEXTURE_PATH = "textures/viking_room.png";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
+
+
 
 
 // I have no goddamn clue what this does.
@@ -84,9 +84,6 @@ private:
     ImageView imageView;
     RenderPass renderPass;
     GraphicsPipeline graphicsPipeline;
-    CommandStructure commandStructure;
-    Buffer buffer;
-
 
     VkSurfaceKHR m_surface;
     VkPhysicalDevice m_physicalDevice;
@@ -147,12 +144,12 @@ private:
         // Initialization
         init.init(&window);
         init.assign(&m_surface, &m_physicalDevice, &m_logical_device, &m_graphicsQueue, &m_presentQueue);
-        QueueFamilyIndices qFamilyIndices = init.findQueueFamilies(m_physicalDevice);
-
+        
         // Swap Chain
         swapChain.create(init, window);
         swapChain.createImageViews(m_logical_device, imageView);
         swapChain.assign(&m_swapChain, &m_swapChainImageFormat, &m_swapChainExtent, &m_swapChainImageViews);
+        
         
         // Render Pass
         renderPass.create(m_swapChainImageFormat, m_physicalDevice, m_logical_device);
@@ -164,10 +161,7 @@ private:
         m_graphicsPipeline = graphicsPipeline.graphicsPipeline;
         m_pipelineLayout = graphicsPipeline.pipelineLayout;
 
-
-        commandStructure.createCommandPool(qFamilyIndices, m_logical_device);
-        m_commandPool = commandStructure.commandPool;
-
+        createCommandPool();
         createDepthResources();
         createFramebuffers();
 
@@ -189,8 +183,7 @@ private:
         createDescriptorPool();
         createDescriptorSets();
 
-        commandStructure.createCommandBuffers(m_logical_device, MAX_FRAMES_IN_FLIGHT);
-        m_commandBuffers = commandStructure.commandBuffers;
+        createCommandBuffers();
         createSyncObjects();
     }
 
@@ -201,6 +194,7 @@ private:
         }
         vkDeviceWaitIdle(m_logical_device);
     }
+
 
     void recreateSwapChain() {
         // Handling minimization
@@ -217,6 +211,8 @@ private:
         createDepthResources();
         createFramebuffers();
     }
+
+
 
     void createDescriptorSetLayout() {
 
@@ -247,6 +243,41 @@ private:
 
     
 
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = m_renderPass;
+            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+            framebufferInfo.pAttachments = attachments.data();
+            framebufferInfo.pAttachments = attachments.data();
+            framebufferInfo.width = m_swapChainExtent.width;
+            framebufferInfo.height = m_swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(m_logical_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create framebuffer!");
+            }
+        }
+    }
+
+    // COMMAND POOL
+    /*
+        Command pools manage the memory used to store command buffers
+        Allows for multithreaded command recording since all commands are available together in the buffers
+    */
+    void createCommandPool() {
+        QueueFamilyIndices queueFamilyIndices = init.findQueueFamilies(m_physicalDevice);
+
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        // Selecting graphicsFamily in order to issue draw commands in this command pool
+        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+        if (vkCreateCommandPool(m_logical_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create command pool!");
+        }
+    }
+
     void createDepthResources() {
         VkFormat depthFormat = renderPass.findDepthFormat(m_physicalDevice);
         createImage(m_swapChainExtent.width, m_swapChainExtent.height, depthFormat, VK_IMAGE_TILING_OPTIMAL,
@@ -254,6 +285,7 @@ private:
             m_depthImage, m_depthImageMemory);
         m_depthImageView = imageView.create(m_logical_device, m_depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT);
 
+        transitionImageLayout(m_depthImage, depthFormat, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
     }
 
     bool hasStencilComponent(VkFormat format) {
@@ -481,6 +513,7 @@ private:
         endSingleTimeCommands(commandBuffer);
 
     }
+
 
     void loadModel() {
         tinyobj::attrib_t attrib;
@@ -743,11 +776,6 @@ private:
 
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        /*
-            VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: The command buffer will be rerecorded right after executing it once.
-            VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT : This is a secondary command buffer that will be entirely within a single render pass.
-            VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT : The command buffer can be resubmitted while it is also already pending execution.
-        */
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
         vkBeginCommandBuffer(commandBuffer, &beginInfo);
@@ -778,6 +806,7 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
+
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);
@@ -790,6 +819,107 @@ private:
         }
 
         throw std::runtime_error("failed to find suitable memory type!");
+    }
+
+    // COMMAND BUFFER
+    void createCommandBuffers() {
+        m_commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.commandPool = m_commandPool;
+        /*
+            VK_COMMAND_BUFFER_LEVEL_PRIMARY: Can be submitted to a queue for execution, but cannot be called from other command buffers.
+            VK_COMMAND_BUFFER_LEVEL_SECONDARY: Cannot be submitted directly, but can be called from primary command buffers.
+        */
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount = (uint32_t)m_commandBuffers.size();
+
+        if (vkAllocateCommandBuffers(m_logical_device, &allocInfo, m_commandBuffers.data()) != VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate command buffers!");
+        }
+    }
+
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
+        /*
+            If the command buffer was already recorded once, then a call to vkBeginCommandBuffer will implicitly reset it.
+            It's not possible to append commands to a buffer at a later time.
+        */
+        VkCommandBufferBeginInfo beginInfo{};
+        /*
+            VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT: The command buffer will be rerecorded right after executing it once.
+            VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT : This is a secondary command buffer that will be entirely within a single render pass.
+            VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT : The command buffer can be resubmitted while it is also already pending execution.
+        */
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+
+        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error("failed to begin recording command buffer!");
+        }
+
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = m_renderPass;
+        // DEBUG
+        //printf("imageIndex DEBUG: %d\n", imageIndex);
+        renderPassInfo.framebuffer = m_swapChainFramebuffers[imageIndex];
+        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderArea.extent = m_swapChainExtent;
+
+        // VK_ATTACHMENT_LOAD_OP_CLEAR clear values for color and depth stencil
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+        clearValues[1].depthStencil = { 1.0f, 0 };
+        renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+
+
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // Binding the graphics pipeline
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
+
+        // We set the viewport and scissor state as dynamic in the pipeline 
+        // We need to set those up in the command buffer now  
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(m_swapChainExtent.width);
+        viewport.height = static_cast<float>(m_swapChainExtent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+        VkRect2D scissor{};
+        scissor.offset = { 0, 0 };
+        scissor.extent = m_swapChainExtent;
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        VkBuffer vertexBuffers[] = { m_vertexBuffer };
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+
+        vkCmdBindIndexBuffer(commandBuffer, m_indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1,
+            &m_descriptorSets[m_currentFrame], 0, nullptr);
+
+        /*
+            vkCmdDraw(VkCommandBuffer, vertexCount, instanceCount, firstVertex, firstInstance)
+            vertexCount: Even though we don't have a vertex buffer, we technically still have 3 vertices to draw.
+            instanceCount: Used for instanced rendering, use 1 if you're not doing that.
+            firstVertex: Used as an offset into the vertex buffer, defines the lowest value of gl_VertexIndex.
+            firstInstance: Used as an offset for instanced rendering, defines the lowest value of gl_InstanceIndex.
+        */
+        //vkCmdDraw(commandBuffer, static_cast<uint32_t>(vertices.size()), 1, 0, 0);
+        vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(m_indices.size()), 1, 0, 0, 0);
+        vkCmdEndRenderPass(commandBuffer);
+
+        if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+            throw std::runtime_error("failed to record command buffer!");
+        }
+
     }
 
     // SEMAPHORES AND FENCES
@@ -850,14 +980,9 @@ private:
 
         // Record a command buffer which draws the scene onto that image
         vkResetCommandBuffer(m_commandBuffers[m_currentFrame], 0);
+        recordCommandBuffer(m_commandBuffers[m_currentFrame], imageIndex);
 
-        commandStructure.recordCommandBuffer(
-            m_commandBuffers[m_currentFrame], imageIndex, m_renderPass, 
-            m_swapChainFramebuffers,m_swapChainExtent, m_graphicsPipeline, m_vertexBuffer, 
-            m_indexBuffer, m_pipelineLayout, m_descriptorSets, m_currentFrame, m_indices);
-        //recordCommandBuffer(m_commandBuffers[m_currentFrame], imageIndex);
-
-        // SUBMIT COMMANDS FROM COMMAND BUFFER
+        // Submit the recorded command buffer
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
@@ -922,6 +1047,7 @@ private:
         memcpy(m_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
     }
     
+
     void cleanupSwapChain() {
         vkDestroyImageView(m_logical_device, m_depthImageView, nullptr);
         vkDestroyImage(m_logical_device, m_depthImage, nullptr);
