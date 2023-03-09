@@ -44,7 +44,6 @@
 #include "SwapChain.hpp"
 #include "RenderPass.hpp"
 #include "GraphicsPipeline.hpp"
-#include "CommandStructure.hpp"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -85,7 +84,6 @@ private:
     ImageView imageView;
     RenderPass renderPass;
     GraphicsPipeline graphicsPipeline;
-    CommandStructure commandStructure;
 
     VkSurfaceKHR m_surface;
     VkPhysicalDevice m_physicalDevice;
@@ -261,6 +259,25 @@ private:
             if (vkCreateFramebuffer(m_logical_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create framebuffer!");
             }
+        }
+    }
+
+    // COMMAND POOL
+    /*
+        Command pools manage the memory used to store command buffers
+        Allows for multithreaded command recording since all commands are available together in the buffers
+    */
+    void createCommandPool() {
+        QueueFamilyIndices queueFamilyIndices = init.findQueueFamilies(m_physicalDevice);
+
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        // Selecting graphicsFamily in order to issue draw commands in this command pool
+        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+
+        if (vkCreateCommandPool(m_logical_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create command pool!");
         }
     }
 
