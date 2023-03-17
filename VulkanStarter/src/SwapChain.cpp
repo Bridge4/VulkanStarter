@@ -72,6 +72,31 @@ void SwapChain::createImageViews(VkDevice device, ImageView imgV) {
     }
 }
 
+void SwapChain::createFramebuffers(VkImageView depthImageView, VkRenderPass renderPass, VkDevice device) {
+    m_swapChainFramebuffers.resize(m_swapChainImageViews.size());
+
+    // Loop through swap chain image views
+    for (size_t i = 0; i < m_swapChainImageViews.size(); i++) {
+        std::array<VkImageView, 2> attachments = {
+            m_swapChainImageViews[i],
+            depthImageView
+        };
+
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = renderPass;
+        framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.pAttachments = attachments.data();
+        framebufferInfo.width = m_swapChainExtent.width;
+        framebufferInfo.height = m_swapChainExtent.height;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create framebuffer!");
+        }
+    }
+}
 void SwapChain::assign(VkSwapchainKHR* swapChain, VkFormat* scFormat, VkExtent2D* scExtent, std::vector<VkImageView>* scImageViews)
 {
     *swapChain = get();

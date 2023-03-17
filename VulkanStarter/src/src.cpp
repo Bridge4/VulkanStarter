@@ -76,7 +76,7 @@ public:
 
 private:
 
-    Core init;
+    Core core;
     Window window;
     SwapChain swapChain;
     ImageView imageView;
@@ -139,13 +139,17 @@ private:
     // INITIALIZING VULKAN INSTANCE
     void initVulkan() {
 
-        // TODO: make it so that we don't need to make assignments anywhere
+        /*
+            TODO: make it so that we don't need to make assignments anywhere
+            1 - Make the member variables accessible so that we can work on other functions in the interim
+            2 - Modify existing abstractions to use the private/public vars in order to declutter this app class
+        */ 
         // Initialization
-        init.init(&window);
-        init.assign(&m_surface, &m_physicalDevice, &m_logical_device, &m_graphicsQueue, &m_presentQueue);
+        core.init(&window);
+        core.assign(&m_surface, &m_physicalDevice, &m_logical_device, &m_graphicsQueue, &m_presentQueue);
         
         // Swap Chain
-        swapChain.create(init, window);
+        swapChain.create(core, window);
         swapChain.createImageViews(m_logical_device, imageView);
         swapChain.assign(&m_swapChain, &m_swapChainImageFormat, &m_swapChainExtent, &m_swapChainImageViews);
         
@@ -159,23 +163,33 @@ private:
         m_graphicsPipeline = graphicsPipeline.graphicsPipeline;
         m_pipelineLayout = graphicsPipeline.pipelineLayout;
 
-        createCommandPool();
-        createDepthResources();
-        createFramebuffers();
 
+        createCommandPool();
+        // Don't touch
+        createDepthResources();
+
+        // Safe to attempt
+        swapChain.createFramebuffers(m_depthImageView, m_renderPass, m_logical_device);
+        m_swapChainFramebuffers = swapChain.getFramebuffers();
+        // Don't touch
         createTextureImage();
         createTextureImageView();
         createTextureSampler();
 
+        // Non-Vulkan
         loadModel();
+
+        // Nightmare
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
 
+        // Safe to attempt
         createDescriptorPool();
         createDescriptorSets();
 
         createCommandBuffers();
+
         createSyncObjects();
     }
 
@@ -187,7 +201,6 @@ private:
         vkDeviceWaitIdle(m_logical_device);
     }
 
-
     void recreateSwapChain() {
         // Handling minimization
         window.handleMinimization();
@@ -196,14 +209,14 @@ private:
 
         cleanupSwapChain();
 
-        swapChain.create(init, window);
+        swapChain.create(core, window);
         swapChain.createImageViews(m_logical_device, imageView);
         swapChain.assign(&m_swapChain, &m_swapChainImageFormat, &m_swapChainExtent, &m_swapChainImageViews);
 
         createDepthResources();
-        createFramebuffers();
+        swapChain.createFramebuffers(m_depthImageView, m_renderPass, m_logical_device);
+        m_swapChainFramebuffers = swapChain.getFramebuffers();
     }
-
 
 
     void createDescriptorSetLayout() {
@@ -233,40 +246,13 @@ private:
         }
     }
 
-    // SWAPCHAIN FRAME BUFFERS
-    void createFramebuffers() {
-        m_swapChainFramebuffers.resize(m_swapChainImageViews.size());
-
-        // Loop through swap chain image views
-        for (size_t i = 0; i < m_swapChainImageViews.size(); i++) {
-            std::array<VkImageView, 2> attachments = {
-                m_swapChainImageViews[i],
-                m_depthImageView
-            };
-
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = m_renderPass;
-            framebufferInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = m_swapChainExtent.width;
-            framebufferInfo.height = m_swapChainExtent.height;
-            framebufferInfo.layers = 1;
-
-            if (vkCreateFramebuffer(m_logical_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create framebuffer!");
-            }
-        }
-    }
-
     // COMMAND POOL
     /*
         Command pools manage the memory used to store command buffers
         Allows for multithreaded command recording since all commands are available together in the buffers
     */
     void createCommandPool() {
-        QueueFamilyIndices queueFamilyIndices = init.findQueueFamilies(m_physicalDevice);
+        QueueFamilyIndices queueFamilyIndices = core.findQueueFamilies(m_physicalDevice);
 
         VkCommandPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -514,7 +500,6 @@ private:
         endSingleTimeCommands(commandBuffer);
 
     }
-
 
     void loadModel() {
         tinyobj::attrib_t attrib;
@@ -1074,7 +1059,7 @@ private:
         vkDestroyCommandPool(m_logical_device, m_commandPool, nullptr);
         
         // DEVICE DESTRUCTION
-        init.destroy();
+        core.destroy();
         // GLFW DESTRUCTION
         window.destroy();
     }

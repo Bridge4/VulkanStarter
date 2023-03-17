@@ -18,6 +18,8 @@ public:
 
     void createImageViews(VkDevice device, ImageView imgV);
 
+    void createFramebuffers(VkImageView depthImageView, VkRenderPass renderPass, VkDevice device); 
+
     void assign(VkSwapchainKHR* swapChain, VkFormat* scFormat, VkExtent2D* scExtent, std::vector<VkImageView>* scImageViews);
 
     VkSwapchainKHR get() { return m_swapChain; }
@@ -26,11 +28,14 @@ public:
     
     VkExtent2D getExtent() { return m_swapChainExtent; }
 
+    std::vector<VkFramebuffer> getFramebuffers() { return m_swapChainFramebuffers; }
+
     std::vector<VkImageView> getImageViews() { return m_swapChainImageViews; }
 
 private:
     VkSwapchainKHR m_swapChain;
     std::vector<VkImage> m_swapChainImages;
+    std::vector<VkFramebuffer> m_swapChainFramebuffers;
     VkFormat m_swapChainImageFormat;
     VkExtent2D m_swapChainExtent;
     std::vector<VkImageView> m_swapChainImageViews;
