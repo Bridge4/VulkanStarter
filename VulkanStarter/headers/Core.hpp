@@ -11,7 +11,7 @@
 #include "StructLib.hpp"
 
 
-class Initializer {
+class Core {
 
 public:
 #ifdef NDEBUG
@@ -19,8 +19,6 @@ public:
 #else
     const bool enableValidationLayers = true;
 #endif
-
-    //~Initializer();
 
     void init(Window* window);
 

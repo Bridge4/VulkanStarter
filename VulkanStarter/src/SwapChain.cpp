@@ -1,7 +1,7 @@
 #include "SwapChain.hpp"
 
 
-void SwapChain::create(Initializer init, Window window) {
+void SwapChain::create(Core init, Window window) {
     VkPhysicalDevice physDevice = init.physDevice();
     VkDevice device = init.logDevice();
     VkSurfaceKHR surface = init.surface();

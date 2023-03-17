@@ -1,9 +1,9 @@
-#include "Initializer.hpp"
+#include "Core.hpp"
 
 // CORE FUNCTIONS
 
 
-void Initializer::init(Window* window)
+void Core::init(Window* window)
 {
     createInstance();
     createDebugMessenger();
@@ -13,7 +13,7 @@ void Initializer::init(Window* window)
     createLogicalDevice();
 }
 
-void Initializer::assign(VkSurfaceKHR* rSurface, VkPhysicalDevice* pDevice, VkDevice* device, VkQueue* gQueue, VkQueue* pQueue)
+void Core::assign(VkSurfaceKHR* rSurface, VkPhysicalDevice* pDevice, VkDevice* device, VkQueue* gQueue, VkQueue* pQueue)
 {
     *rSurface = surface();
     *pDevice = physDevice();
@@ -23,7 +23,7 @@ void Initializer::assign(VkSurfaceKHR* rSurface, VkPhysicalDevice* pDevice, VkDe
 }
 
 
-void Initializer::destroy() {
+void Core::destroy() {
     vkDestroyDevice(r_device, nullptr);
     if (enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(m_instance, m_debugMessenger, nullptr);
@@ -32,7 +32,7 @@ void Initializer::destroy() {
     vkDestroyInstance(m_instance, nullptr);
 }
 
-void Initializer::createInstance() {
+void Core::createInstance() {
     // A lot of information is passed through structs rather than function parameters
     if (enableValidationLayers && !checkValidationLayerSupport()) {
         throw std::runtime_error("validation layers requested but not available...");
@@ -80,7 +80,7 @@ void Initializer::createInstance() {
     }
 }
 
-void Initializer::createDebugMessenger() {
+void Core::createDebugMessenger() {
     if (!enableValidationLayers) return;
 
     VkDebugUtilsMessengerCreateInfoEXT createInfo;
@@ -91,11 +91,11 @@ void Initializer::createDebugMessenger() {
     }
 }
 
-void Initializer::createSurface(Window window) {
+void Core::createSurface(Window window) {
     window.createSurface(m_instance, &r_surface);
 }
 
-void Initializer::pickPhysicalDevice() {
+void Core::pickPhysicalDevice() {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(m_instance, &deviceCount, nullptr);
     // check if there are no compatible devices (GPUs)
@@ -120,7 +120,7 @@ void Initializer::pickPhysicalDevice() {
     }
 }
 
-void Initializer::createLogicalDevice() {
+void Core::createLogicalDevice() {
     // Specifying queues to be created
     QueueFamilyIndices indices = findQueueFamilies(r_physicalDevice);
     VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -173,7 +173,7 @@ void Initializer::createLogicalDevice() {
 // HELPERS
 
 // createInstance()
-bool Initializer::checkValidationLayerSupport() {
+bool Core::checkValidationLayerSupport() {
 
     uint32_t layerCount;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
@@ -199,7 +199,7 @@ bool Initializer::checkValidationLayerSupport() {
     return true;
 }
 
-std::vector<const char*> Initializer::getRequiredExtensions() {
+std::vector<const char*> Core::getRequiredExtensions() {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -213,7 +213,7 @@ std::vector<const char*> Initializer::getRequiredExtensions() {
     return extensions;
 }
 
-void Initializer::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+void Core::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
     createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
     createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
@@ -222,7 +222,7 @@ void Initializer::populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateIn
 }
 
 // pickPhysicalDevice()
-bool Initializer::isDeviceSuitable(VkPhysicalDevice device) {
+bool Core::isDeviceSuitable(VkPhysicalDevice device) {
     // Fetching deviceProperties and deviceFeatures in case we want to check for specifics
     /*
     VkPhysicalDeviceProperties deviceProperties;
@@ -250,7 +250,7 @@ bool Initializer::isDeviceSuitable(VkPhysicalDevice device) {
 }
 
 // isDeviceSuitable()
-bool Initializer::checkDeviceExtensionSupport(VkPhysicalDevice device) {
+bool Core::checkDeviceExtensionSupport(VkPhysicalDevice device) {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
 
@@ -267,7 +267,7 @@ bool Initializer::checkDeviceExtensionSupport(VkPhysicalDevice device) {
     return requiredExtensions.empty();
 }
 
-SwapChainSupportDetails Initializer::querySwapChainSupport(VkPhysicalDevice device) {
+SwapChainSupportDetails Core::querySwapChainSupport(VkPhysicalDevice device) {
 
     // Fetching the capabilities of the device and surface
 
@@ -297,7 +297,7 @@ SwapChainSupportDetails Initializer::querySwapChainSupport(VkPhysicalDevice devi
 }
 
 // isDeviceSuitable() + createLogicalDevice()
-QueueFamilyIndices Initializer::findQueueFamilies(VkPhysicalDevice device) {
+QueueFamilyIndices Core::findQueueFamilies(VkPhysicalDevice device) {
     QueueFamilyIndices indices;
     uint32_t queueFamilyCount = 0;
 
@@ -326,14 +326,14 @@ QueueFamilyIndices Initializer::findQueueFamilies(VkPhysicalDevice device) {
 }
 
 // populateDebugMessengerCreateInfo()
-VKAPI_ATTR VkBool32 VKAPI_CALL Initializer::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+VKAPI_ATTR VkBool32 VKAPI_CALL Core::debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
     std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
     return VK_FALSE;
 }
 
 // setupDebugMessenger()
-VkResult Initializer::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
+VkResult Core::CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
     const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr) {
@@ -344,7 +344,7 @@ VkResult Initializer::CreateDebugUtilsMessengerEXT(VkInstance instance, const Vk
     }
 }
 
-void Initializer::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+void Core::DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr) {
         func(instance, debugMessenger, pAllocator);

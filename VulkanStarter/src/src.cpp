@@ -39,7 +39,7 @@
 #include "StructLib.hpp"
 
 #include "Window.hpp"
-#include "Initializer.hpp"
+#include "Core.hpp"
 #include "ImageView.hpp"
 #include "SwapChain.hpp"
 #include "RenderPass.hpp"
@@ -51,8 +51,6 @@ const std::string MODEL_PATH = "models/model.obj";
 const std::string TEXTURE_PATH = "textures/viking_room.png";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
-
-
 
 
 // I have no goddamn clue what this does.
@@ -78,7 +76,7 @@ public:
 
 private:
 
-    Initializer init;
+    Core init;
     Window window;
     SwapChain swapChain;
     ImageView imageView;
@@ -701,7 +699,7 @@ private:
             descriptorWrites[1].pImageInfo = &imageInfo;
 
 
-            vkUpdateDescriptorSets(m_logical_device, descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
+            vkUpdateDescriptorSets(m_logical_device, (uint32_t) descriptorWrites.size(), descriptorWrites.data(), 0, nullptr);
         }
 
 

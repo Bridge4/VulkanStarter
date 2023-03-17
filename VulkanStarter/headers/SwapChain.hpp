@@ -8,13 +8,13 @@
 #include <algorithm>
 #include "ImageView.hpp"
 // This is a heavy include I'd like to clean up later. 
-#include "Initializer.hpp"
+#include "Core.hpp"
 
 // Including Initializer for the SwapChainSupportDetails struct
 class SwapChain
 {
 public: 
-    void create(Initializer init, Window window);
+    void create(Core init, Window window);
 
     void createImageViews(VkDevice device, ImageView imgV);
 
