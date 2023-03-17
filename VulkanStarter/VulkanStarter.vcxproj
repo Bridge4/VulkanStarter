@@ -18,6 +18,41 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Buffer.cpp" />
+    <ClCompile Include="src\Core.cpp" />
+    <ClCompile Include="src\GraphicsPipeline.cpp" />
+    <ClCompile Include="src\ImageView.cpp" />
+    <ClCompile Include="src\RenderPass.cpp" />
+    <ClCompile Include="src\src.cpp" />
+    <ClCompile Include="src\StructLib.cpp" />
+    <ClCompile Include="src\SwapChain.cpp" />
+    <ClCompile Include="src\Window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="headers\Buffer.hpp" />
+    <ClInclude Include="headers\Core.hpp" />
+    <ClInclude Include="headers\GraphicsPipeline.hpp" />
+    <ClInclude Include="headers\ImageView.hpp" />
+    <ClInclude Include="headers\RenderPass.hpp" />
+    <ClInclude Include="headers\StructLib.hpp" />
+    <ClInclude Include="headers\SwapChain.hpp" />
+    <ClInclude Include="headers\Window.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\compile.bat" />
+    <None Include="shaders\frag.spv" />
+    <None Include="shaders\shader.frag" />
+    <None Include="shaders\shader.vert" />
+    <None Include="shaders\vert.spv" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="textures\dg.jpg" />
+    <Image Include="textures\mars.png" />
+    <Image Include="textures\model.png" />
+    <Image Include="textures\tesla.jpeg" />
+    <Image Include="textures\viking_room.png" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -118,14 +153,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\abdul\Documents\Visual Studio 2022\Libraries\tinyobjloader-release;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\stb-master;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glm;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glfw-3.3.8.bin.WIN64\include;C:\VulkanSDK\1.3.239.0\Include;$(ProjectDir)headers;$(ProjectDir)source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\abdul\Documents\Visual Studio 2022\Libraries\tinyobjloader-release;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\stb-master;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glm;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glfw-3.3.8.bin.WIN64\include;C:\VulkanSDK\1.3.239.0\Include;$(ProjectDir)headers;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AnalyzeExternalRuleset>/ analyze:external -</AnalyzeExternalRuleset>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.239.0\Lib;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glfw-3.3.8.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)headers;C:\VulkanSDK\1.3.239.0\Lib;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glfw-3.3.8.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -137,7 +172,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\abdul\Documents\Visual Studio 2022\Libraries\tinyobjloader-release;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\stb-master;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glm;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glfw-3.3.8.bin.WIN64\include;C:\VulkanSDK\1.3.239.0\Include;$(ProjectDir)headers;$(ProjectDir)source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\abdul\Documents\Visual Studio 2022\Libraries\tinyobjloader-release;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\stb-master;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glm;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glfw-3.3.8.bin.WIN64\include;C:\VulkanSDK\1.3.239.0\Include;$(ProjectDir)headers;$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <AnalyzeExternalRuleset>/ analyze:external -</AnalyzeExternalRuleset>
     </ClCompile>
@@ -146,7 +181,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.239.0\Lib;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glfw-3.3.8.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)headers;C:\VulkanSDK\1.3.239.0\Lib;C:\Users\abdul\Documents\Visual Studio 2022\Libraries\glfw-3.3.8.bin.WIN64\lib-vc2022;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

@@ -6,7 +6,7 @@
 #include <set>
 #include <vector>
 #include <optional>
-#include <cstdint> // Necessary for uint32_t
+#include <cstdint> // Necessary for uint32_t 
 #include "Window.hpp"
 #include "StructLib.hpp"
 

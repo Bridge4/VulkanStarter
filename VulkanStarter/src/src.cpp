@@ -139,6 +139,7 @@ private:
     // INITIALIZING VULKAN INSTANCE
     void initVulkan() {
 
+        // TODO: make it so that we don't need to make assignments anywhere
         // Initialization
         init.init(&window);
         init.assign(&m_surface, &m_physicalDevice, &m_logical_device, &m_graphicsQueue, &m_presentQueue);
@@ -147,7 +148,6 @@ private:
         swapChain.create(init, window);
         swapChain.createImageViews(m_logical_device, imageView);
         swapChain.assign(&m_swapChain, &m_swapChainImageFormat, &m_swapChainExtent, &m_swapChainImageViews);
-        
         
         // Render Pass
         renderPass.create(m_swapChainImageFormat, m_physicalDevice, m_logical_device);

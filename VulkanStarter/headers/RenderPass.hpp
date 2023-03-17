@@ -19,8 +19,6 @@ public:
 
 private:
 
-    
-
     // used by findDepthFormat()
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features, VkPhysicalDevice pDevice);
 };
