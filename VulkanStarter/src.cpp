@@ -44,7 +44,7 @@
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
-const std::string MODEL_PATH = "models/model.obj";
+const std::string MODEL_PATH = "models/viking_room.obj";
 const std::string TEXTURE_PATH = "textures/viking_room.png";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -1158,7 +1158,7 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
-
+    // TODO: Move this to the Texture class as well as the Image class if I end up creating that (the Image class)
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
         VkPhysicalDeviceMemoryProperties memProperties;
         vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &memProperties);

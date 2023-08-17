@@ -106,6 +106,4 @@ private:
     // Used to destroy debugger
     void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
 
-    // Used by destructor to...destroy everything
-    
 };
