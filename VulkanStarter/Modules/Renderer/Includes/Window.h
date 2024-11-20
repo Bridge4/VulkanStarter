@@ -7,6 +7,11 @@ class Window
 {
 
 public:
+
+    /*void handleInput() {
+        glfwSetKeyCallback(glfwKeyCalback);
+    };*/
+
     bool framebufferResized = false;
 
     void destroy();
@@ -23,8 +28,10 @@ public:
 
     VkResult createSurface(VkInstance instance, VkSurfaceKHR* surface, VkAllocationCallbacks* allocationCallbacks=nullptr);
 
-    void createWindow(uint32_t w = 800, uint32_t h = 600);
+    void createWindow(uint32_t width = 800, uint32_t height = 600);
 
+    //void GLFWCALL glfwKeyCalback(GLFWwindow* r_window, int key, int scancode, int action, int mods);
+    
 private:
     GLFWwindow* r_window;
 
@@ -34,4 +41,5 @@ private:
 
         // Used by createWindow();
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height);
+
 };

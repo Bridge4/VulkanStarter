@@ -56,9 +56,9 @@ void Initializer::createInstance() {
     // ADDING appInfo to createInfo
     createInfo.pApplicationInfo = &appInfo;
 
-
+    
     // Vulkan is platform agnostic. Here we provide the GLFW extension to interface with the window system
-    auto extensions = getRequiredExtensions();
+    std::vector<const char*> extensions = getRequiredExtensions();
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
 

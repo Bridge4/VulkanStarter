@@ -1,14 +1,18 @@
 #pragma once
 
-#include "Renderer/Renderer.h"
+#include "Modules/Renderer/Renderer.h"
 
 
 //#include <iostream>
 
 int main() {
     Renderer renderer;
+    Window windowRef;
 
     try {
+        renderer.window = windowRef;
+        renderer.window.createWindow(1980, 1080);
+        renderer.customModelLoader = false;
         renderer.run();
     }
     catch (const std::exception& e) {

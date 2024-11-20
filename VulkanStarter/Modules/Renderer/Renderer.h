@@ -46,8 +46,8 @@
 
 extern const uint32_t WIDTH = 800;
 extern const uint32_t HEIGHT = 600;
-extern const std::string MODEL_PATH = "Models/VikingRoom/ObjVikingRoom.obj";
-extern const std::string TEXTURE_PATH = "Models/VikingRoom/Textures/TexVikingRoom.png";
+extern const std::string MODEL_PATH = "Models/VikingRoom/VikingRoom.obj";
+extern const std::string TEXTURE_PATH = "Models/VikingRoom/Textures/VikingRoom.png";
 
 extern const int MAX_FRAMES_IN_FLIGHT = 2;
 
@@ -128,18 +128,19 @@ class Renderer {
 public:
 
     void run() {
-        window.createWindow();
+        //window.createWindow();
         initVulkan();
         renderLoop();
         cleanup();
     }
-    
+    Window window;
+    bool customModelLoader = false;
 
 private:
     
     // INSTANCES
     Initializer init;
-    Window window;
+    //Window window;
     SwapChain swapChain;
     ImageView imageView;
 
@@ -220,8 +221,9 @@ private:
         createTextureImage();
         createTextureImageView();
         createTextureSampler();
-
+        
         loadModel();
+        
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
@@ -377,9 +379,13 @@ private:
     }
 
     // GRAPHICS PIPELINE
+    /*
+    *   Create a graphics pipeline to render
+    * 
+    */
     void createGraphicsPipeline() {
-        auto vertShaderCode = readFile("Renderer/Shaders/vert.spv");
-        auto fragShaderCode = readFile("Renderer/Shaders/frag.spv");
+        auto vertShaderCode = readFile("Modules/Renderer/Shaders/vert.spv");
+        auto fragShaderCode = readFile("Modules/Renderer/Shaders/frag.spv");
         
         VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
         VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);
@@ -881,52 +887,57 @@ private:
 
 
     void loadModel() {
-        tinyobj::attrib_t attrib;
+        if (!customModelLoader) {
+            tinyobj::attrib_t attrib;
 
 
-        // List: {0, 1, 2, 3}
+            // List: {0, 1, 2, 3}
 
-        // List(5): {0, 1, 2, 3, 4}
+            // List(5): {0, 1, 2, 3, 4}
 
-        // Vector (5): {0, 1, 2, 3, 4} + {4564565}
-        // resize
-        // Vector (6) : {0, 1, 2, 3, 4, 4564565}
+            // Vector (5): {0, 1, 2, 3, 4} + {4564565}
+            // resize
+            // Vector (6) : {0, 1, 2, 3, 4, 4564565}
 
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
+            std::vector<tinyobj::shape_t> shapes;
+            std::vector<tinyobj::material_t> materials;
+            std::string warn, err;
 
-        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str())) {
-            throw std::runtime_error(warn + err);
-        }
-
-        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-
-        for (const auto& shape : shapes) {
-            for (const auto& index : shape.mesh.indices) {
-                Vertex vertex{};
-
-                vertex.pos = {
-                    attrib.vertices[3 * index.vertex_index + 0],
-                    attrib.vertices[3 * index.vertex_index + 1],
-                    attrib.vertices[3 * index.vertex_index + 2]
-                };
-
-                vertex.texCoord = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-                };
-
-
-
-                if (uniqueVertices.count(vertex) == 0) {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(m_vertices.size());
-                    m_vertices.push_back(vertex);
-                }
-                m_indices.push_back(uniqueVertices[vertex]);
-
-                vertex.color = { 1.0f, 1.0f, 1.0f };
+            if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str())) {
+                throw std::runtime_error(warn + err);
             }
+
+            std::unordered_map<Vertex, uint32_t> uniqueVertices{};
+
+            for (const auto& shape : shapes) {
+                for (const auto& index : shape.mesh.indices) {
+                    Vertex vertex{};
+
+                    vertex.pos = {
+                        attrib.vertices[3 * index.vertex_index + 0],
+                        attrib.vertices[3 * index.vertex_index + 1],
+                        attrib.vertices[3 * index.vertex_index + 2]
+                    };
+
+                    vertex.texCoord = {
+                        attrib.texcoords[2 * index.texcoord_index + 0],
+                        1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
+                    };
+
+
+
+                    if (uniqueVertices.count(vertex) == 0) {
+                        uniqueVertices[vertex] = static_cast<uint32_t>(m_vertices.size());
+                        m_vertices.push_back(vertex);
+                    }
+                    m_indices.push_back(uniqueVertices[vertex]);
+
+                    vertex.color = { 1.0f, 1.0f, 1.0f };
+                }
+            }
+        }
+        else {
+
         }
     }
 
@@ -995,9 +1006,7 @@ private:
         m_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                m_uniformBuffers[i], m_uniformBuffersMemory[i]);
+            createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,m_uniformBuffers[i], m_uniformBuffersMemory[i]);
             vkMapMemory(m_logical_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]);
         }
     }
@@ -1311,9 +1320,7 @@ private:
         uint32_t imageIndex;
 
         // SWAP CHAIN RECREATION
-        VkResult result = vkAcquireNextImageKHR(m_logical_device, m_swapChain, UINT64_MAX,
-            m_imageAvailableSemaphores[m_currentFrame],
-            VK_NULL_HANDLE, &imageIndex);
+        VkResult result = vkAcquireNextImageKHR(m_logical_device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphores[m_currentFrame],VK_NULL_HANDLE, &imageIndex);
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             recreateSwapChain();
             return;
